@@ -74,6 +74,9 @@ INSTALLED_APPS = [
     'captcha',
 ]
 
+CAPTCHA_CHALLENGE_FUNCT = 'comments.captcha_challenges.alnum_challenge'
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',

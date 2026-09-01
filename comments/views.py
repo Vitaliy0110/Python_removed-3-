@@ -4,6 +4,7 @@ from channels.layers import get_channel_layer
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from collections import defaultdict
 
 
 from .forms import CommentForm, CommentHTMLValidator, sanitize_comment_html
@@ -12,6 +13,31 @@ from .models import Comment
 
 MAX_BIGINT = 9223372036854775807  # предел PostgreSQL bigint
 
+def attach_cached_replies(root_comments):
+    """Достает всё дерево ответов для переданных корневых комментариев
+    и раскладывает его по атрибуту `cached_replies` на каждом объекте.
+    """
+    root_ids = [comment.id for comment in root_comments]
+    all_comments = {comment.id: comment for comment in root_comments}
+
+    frontier_ids = root_ids
+    while frontier_ids:
+        children = list(Comment.objects.filter(parent_id__in=frontier_ids))
+        if not children:
+            break
+        for child in children:
+            all_comments[child.id] = child
+        frontier_ids = [child.id for child in children]
+
+    children_map = defaultdict(list)
+    for comment in all_comments.values():
+        if comment.parent_id is not None:
+            children_map[comment.parent_id].append(comment)
+
+    for comment in all_comments.values():
+        comment.cached_replies = children_map.get(comment.id, [])
+
+    return root_comments
 
 def get_parent_comment(raw_id):
     """Безопасно достает родительский комментарий по id из GET/POST.
@@ -117,6 +143,7 @@ def comment_list(request):
 
     page_number = request.GET.get('page')
     comments = paginator.get_page(page_number)
+    attach_cached_replies(list(comments))
 
 
     context = {
