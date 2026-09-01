@@ -1,4 +1,4 @@
-<div class="comment">
+<div class="comment" id="comment-{{ comment.id }}">
 
     <strong>
         {% if comment.home_page %}
@@ -42,7 +42,7 @@
         </p>
     {% endif %}
 
-    <a href="?reply={{ comment.id }}">
+    <a href="?reply={{ comment.id }}#comment-{{ comment.id }}">
         Ответить
     </a>
 
