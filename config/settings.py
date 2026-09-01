@@ -47,9 +47,8 @@ if render_host:
 ALLOWED_HOSTS = configured_hosts
 
 CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if origin.strip()
+    "http://localhost:8000",
+    "https://python-removed-3.onrender.com",
 ]
 
 # Application definition
