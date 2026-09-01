@@ -1,0 +1,146 @@
+<div class="comment">
+
+    <strong>
+        {% if comment.home_page %}
+            <a href="{{ comment.home_page }}" target="_blank" rel="noopener nofollow">
+                {{ comment.user_name }}
+            </a>
+        {% else %}
+            {{ comment.user_name }}
+        {% endif %}
+    </strong>
+
+    <span>
+        {{ comment.created_at }}
+    </span>
+
+    <p>
+        {{ comment.text|safe }}
+    </p>
+
+    {% if comment.attachment %}
+        <p class="attachment">
+            {% if comment.attachment_kind == 'image' %}
+                <a
+                    href="{{ comment.attachment.url }}"
+                    class="lightbox-trigger"
+                    data-lightbox-image="{{ comment.attachment.url }}"
+                    data-lightbox-alt="Вложение к комментарию пользователя {{ comment.user_name }}"
+                    aria-label="Открыть изображение во всплывающем окне"
+                >
+                    <img
+                        src="{{ comment.attachment.url }}"
+                        alt="Вложение"
+                        class="attachment-image"
+                    >
+                </a>
+            {% else %}
+                <a href="{{ comment.attachment.url }}" target="_blank" rel="noopener">
+                    Скачать вложение
+                </a>
+            {% endif %}
+        </p>
+    {% endif %}
+
+    <a href="?reply={{ comment.id }}">
+        Ответить
+    </a>
+
+
+{% if reply_parent and reply_parent.id == comment.id %}
+
+    <div class="reply-form">
+
+        <h3>Ответить на комментарий</h3>
+
+        <form
+            method="post"
+            action="{% url 'comment_list' %}"
+            enctype="multipart/form-data"
+        >
+
+            {% csrf_token %}
+
+            <input
+                type="hidden"
+                name="parent_id"
+                value="{{ comment.id }}"
+            >
+
+            <p>
+                <label>User Name:</label><br>
+                {{ reply_form.user_name }}
+
+                {% for error in reply_form.user_name.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </p>
+
+            <p>
+                <label>E-mail:</label><br>
+                {{ reply_form.email }}
+
+                {% for error in reply_form.email.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </p>
+
+            <p>
+                <label>Home page:</label><br>
+                {{ reply_form.home_page }}
+
+                {% for error in reply_form.home_page.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </p>
+
+            <p>
+                <label>Text:</label><br>
+
+                {% include "comments/_text_editor.html" with text_widget=reply_form.text %}
+
+                {% for error in reply_form.text.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </p>
+
+            <p>
+                <label>Attachment:</label><br>
+                {{ reply_form.attachment }}
+
+                {% for error in reply_form.attachment.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </p>
+
+            <p>
+                <label>CAPTCHA:</label><br>
+                {{ reply_form.captcha }}
+
+                {% for error in reply_form.captcha.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </p>
+
+            <button type="submit">
+                Отправить ответ
+            </button>
+
+        </form>
+
+    </div>
+
+{% endif %}
+
+
+    {% for reply in comment.replies.all %}
+
+        <div class="reply">
+
+            {% include "comments/_comment.html" with comment=reply %}
+
+        </div>
+
+    {% endfor %}
+
+</div>

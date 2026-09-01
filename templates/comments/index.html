@@ -1,0 +1,244 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Комментарии</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    {# Vue 3 через CDN, без сборки/npm — минимальный слой поверх Django-шаблонов #}
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<script>
+    window.COMMENT_PREVIEW_URL = "{% url 'comment_preview' %}";
+
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(
+        wsProtocol + '//' + window.location.host + '/ws/comments/'
+    );
+
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'comment_created') {
+
+            if (!window.location.search.includes('reply=')) {
+                location.reload();
+            }
+
+        }
+    };
+</script>
+
+
+<body>
+
+<h1>Комментарии</h1>
+
+
+<h2>Добавить комментарий</h2>
+
+<form method="post" enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    <p>
+        <label>User Name:</label><br>
+        {{ form.user_name }}
+
+        {% if form.user_name.errors %}
+            {% for error in form.user_name.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </p>
+
+    <p>
+        <label>E-mail:</label><br>
+        {{ form.email }}
+
+        {% if form.email.errors %}
+            {% for error in form.email.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </p>
+
+    <p>
+        <label>Home page:</label><br>
+        {{ form.home_page }}
+
+        {% if form.home_page.errors %}
+            {% for error in form.home_page.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </p>
+
+    <p>
+        <label for="{{ form.text.id_for_label }}">
+            Text
+        </label>
+
+        {% include "comments/_text_editor.html" with text_widget=form.text %}
+
+        {% if form.text.errors %}
+            {% for error in form.text.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </p>
+
+    <p>
+        <label>CAPTCHA:</label><br>
+        {{ form.captcha }}
+
+        {% if form.captcha.errors %}
+            {% for error in form.captcha.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </p>
+
+    <p>
+        <label>Attachment:</label><br>
+
+    {{ form.attachment }}
+
+        {% if form.attachment.errors %}
+            <ul>
+                {% for error in form.attachment.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </p>
+
+    <button type="submit">
+        Отправить
+    </button>
+
+</form>
+
+
+<hr>
+
+
+<h2>Комментарии пользователей</h2>
+
+
+<table class="comments-table">
+    <thead>
+        <tr>
+            <th>
+                User Name
+                <a href="?sort=user_name&direction=asc">↑</a>
+                <a href="?sort=user_name&direction=desc">↓</a>
+            </th>
+            <th>
+                E-mail
+                <a href="?sort=email&direction=asc">↑</a>
+                <a href="?sort=email&direction=desc">↓</a>
+            </th>
+            <th>
+                Дата добавления
+                <a href="?sort=created_at&direction=asc">↑</a>
+                <a href="?sort=created_at&direction=desc">↓</a>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for comment in comments %}
+            <tr>
+                <td>
+                    {% if comment.home_page %}
+                        <a href="{{ comment.home_page }}" target="_blank" rel="noopener nofollow">{{ comment.user_name }}</a>
+                    {% else %}
+                        {{ comment.user_name }}
+                    {% endif %}
+                </td>
+                <td>{{ comment.email }}</td>
+                <td>{{ comment.created_at }}</td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    {% include "comments/_comment.html" with comment=comment is_root=True %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="3">Комментариев пока нет.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<div
+    id="image-lightbox"
+    class="lightbox"
+    aria-hidden="true"
+>
+    <div
+        class="lightbox__backdrop"
+        data-lightbox-close
+    ></div>
+
+    <div
+        class="lightbox__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Просмотр изображения"
+    >
+        <button
+            type="button"
+            class="lightbox__close"
+            data-lightbox-close
+            aria-label="Закрыть просмотр"
+        >
+            &times;
+        </button>
+
+        <img
+            id="lightbox-image"
+            class="lightbox__image"
+            src=""
+            alt=""
+        >
+    </div>
+</div>
+
+
+<div class="pagination">
+
+    {% if comments.has_previous %}
+        <a href="?sort={{ request.GET.sort|default:'created_at' }}&direction={{ request.GET.direction|default:'desc' }}&page={{ comments.previous_page_number }}">
+            Назад
+        </a>
+    {% endif %}
+
+    <span>
+        Страница {{ comments.number }}
+        из
+        {{ comments.paginator.num_pages }}
+    </span>
+
+    {% if comments.has_next %}
+        <a href="?sort={{ request.GET.sort|default:'created_at' }}&direction={{ request.GET.direction|default:'desc' }}&page={{ comments.next_page_number }}">
+            Вперёд
+        </a>
+    {% endif %}
+
+</div>
+
+
+<script src="{% static 'js/comment-editor.js' %}"></script>
+<script src="{% static 'js/lightbox.js' %}"></script>
+
+</body>
+
+</html>

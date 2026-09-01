@@ -1,0 +1,23 @@
+{# Мини-компонент на Vue 3 (без сборки, через CDN): панель HTML-тегов и превью #}
+<div class="vue-comment-editor">
+
+    <div class="html-toolbar">
+        <button type="button" @click="insertTag('strong')">B</button>
+        <button type="button" @click="insertTag('i')">I</button>
+        <button type="button" @click="insertTag('code')">code</button>
+        <button type="button" @click="insertTag('a')">link</button>
+    </div>
+
+    {{ text_widget }}
+
+    <p>
+        <button type="button" @click="runPreview" :disabled="previewLoading">
+            Предпросмотр
+        </button>
+    </p>
+
+    <p class="preview-error" v-if="previewError" v-text="previewError"></p>
+
+    <div class="preview-output" v-show="previewHtml" v-html="previewHtml"></div>
+
+</div>
