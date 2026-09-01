@@ -68,7 +68,7 @@ def comment_list(request):
                 comment.save()
                 notify_new_comment()
 
-                return redirect('comment_list')
+                return redirect(f'{request.path}#comment-{reply_parent.id}')
 
             form = CommentForm()
 
