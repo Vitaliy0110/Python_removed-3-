@@ -48,8 +48,17 @@ ALLOWED_HOSTS = configured_hosts
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
-    "https://python-removed-3.onrender.com",
 ]
+
+if render_host:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{render_host}")
+
+
+# Render's proxy terminates TLS and forwards plain HTTP to the app,
+# so Django needs to be told to trust X-Forwarded-Proto, otherwise
+# request.is_secure() is always False behind the proxy.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # Application definition
 
