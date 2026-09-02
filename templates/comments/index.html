@@ -80,6 +80,17 @@
     </p>
 
     <p>
+        <label>Аватар:</label><br>
+        {{ form.avatar }}
+
+        {% if form.avatar.errors %}
+            {% for error in form.avatar.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </p>
+
+    <p>
         <label for="{{ form.text.id_for_label }}">
             Text
         </label>

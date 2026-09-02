@@ -27,8 +27,36 @@ body {
     padding-left: 15px;
 }
 
+.comment {
+    background: #f7f8fb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    flex-shrink: 0;
+    background: #eee;
+}
+
+.comment-meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .comment strong {
-    margin-right: 10px;
+    margin-right: 0;
 }
 
 .comment span {

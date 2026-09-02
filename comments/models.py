@@ -8,11 +8,17 @@ def attachment_path(instance, filename):
     extension = Path(filename).suffix.lower()
     return f"attachments/{uuid4().hex}{extension}"
 
+def avatar_path(instance, filename):
+    """Keep user filenames out of storage paths and retain only the extension."""
+    extension = Path(filename).suffix.lower()
+    return f"avatars/{uuid4().hex}{extension}"
+
 class Comment(models.Model):
     user_name = models.CharField(max_length=100)
     email = models.EmailField()
     home_page = models.URLField(blank=True)
     text = models.TextField(validators=[MaxLengthValidator(5000)])
+    avatar = models.ImageField(upload_to=avatar_path, blank=True)
     attachment = models.FileField(upload_to=attachment_path, blank=True)
     attachment_kind = models.CharField(
         max_length=5,

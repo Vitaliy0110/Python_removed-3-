@@ -1,18 +1,40 @@
+{% load comment_extras %}
+
 <div class="comment" id="comment-{{ comment.id }}">
 
-    <strong>
-        {% if comment.home_page %}
-            <a href="{{ comment.home_page }}" target="_blank" rel="noopener nofollow">
-                {{ comment.user_name }}
-            </a>
-        {% else %}
-            {{ comment.user_name }}
-        {% endif %}
-    </strong>
+    <div class="comment-header">
 
-    <span>
-        {{ comment.created_at }}
-    </span>
+        {% if comment.avatar %}
+            <img
+                src="{{ comment.avatar.url }}"
+                alt="Аватар пользователя {{ comment.user_name }}"
+                class="comment-avatar"
+            >
+        {% else %}
+            <img
+                src="{{ comment.email|avatar_url:44 }}"
+                alt="Аватар пользователя {{ comment.user_name }}"
+                class="comment-avatar"
+            >
+        {% endif %}
+
+        <div class="comment-meta">
+            <strong>
+                {% if comment.home_page %}
+                    <a href="{{ comment.home_page }}" target="_blank" rel="noopener nofollow">
+                        {{ comment.user_name }}
+                    </a>
+                {% else %}
+                    {{ comment.user_name }}
+                {% endif %}
+            </strong>
+
+            <span>
+                {{ comment.created_at }}
+            </span>
+        </div>
+
+    </div>
 
     <p>
         {{ comment.text|safe }}
@@ -90,6 +112,15 @@
                 {{ reply_form.home_page }}
 
                 {% for error in reply_form.home_page.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </p>
+
+            <p>
+                <label>Аватар:</label><br>
+                {{ reply_form.avatar }}
+
+                {% for error in reply_form.avatar.errors %}
                     <p>{{ error }}</p>
                 {% endfor %}
             </p>

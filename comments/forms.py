@@ -168,10 +168,14 @@ class CommentForm(forms.ModelForm):
             'email',
             'home_page',
             'text',
+            'avatar',
             'attachment', 
         ]
         widgets = {
             'text': forms.Textarea(attrs={'rows': 6, 'ref': 'textInput'}),
+            'avatar': forms.ClearableFileInput(
+                attrs={"accept": ".jpg,.jpeg,.png"}
+            ),
             'attachment': forms.ClearableFileInput(
                 attrs={"accept": ".jpg,.jpeg,.gif,.png,.txt"}
             ),
@@ -258,6 +262,52 @@ class CommentForm(forms.ModelForm):
                 )
         return value
 
+
+    def clean_avatar(self):
+        """Валидация аватарки: только JPG/PNG, обрезка в квадрат и уменьшение."""
+        uploaded = self.cleaned_data.get("avatar")
+        if not uploaded:
+            return uploaded
+
+        extension = uploaded.name.rsplit(".", 1)[-1].lower() if "." in uploaded.name else ""
+
+        if extension not in {"jpg", "jpeg", "png"}:
+            raise forms.ValidationError("Допустимы только JPG или PNG.")
+
+        MAX_AVATAR_SIZE = 5 * 1024 * 1024  # 5 МБ
+        if uploaded.size > MAX_AVATAR_SIZE:
+            raise forms.ValidationError("Изображение слишком большое (максимум 5 МБ).")
+
+        try:
+            image = Image.open(uploaded)
+            image.verify()
+            uploaded.seek(0)
+            image = Image.open(uploaded)
+        except Image.DecompressionBombError:
+            raise forms.ValidationError(
+                "Изображение слишком большое по разрешению."
+            )
+        except (UnidentifiedImageError, OSError):
+            raise forms.ValidationError("Файл не является корректным изображением.")
+
+        # Обрезаем в квадрат по центру, чтобы аватар не искажался в круге
+        width, height = image.size
+        side = min(width, height)
+        left = (width - side) // 2
+        top = (height - side) // 2
+        image = image.crop((left, top, left + side, top + side))
+
+        AVATAR_SIZE = (160, 160)
+        image.thumbnail(AVATAR_SIZE, Image.Resampling.LANCZOS)
+
+        output_format = "JPEG" if extension in {"jpg", "jpeg"} else "PNG"
+        if output_format == "JPEG" and image.mode not in {"RGB", "L"}:
+            image = image.convert("RGB")
+
+        from io import BytesIO
+        buffer = BytesIO()
+        image.save(buffer, format=output_format)
+        return ContentFile(buffer.getvalue(), name=uploaded.name)
 
     def clean_attachment(self):
         """Валидация вложений: изображения (JPG, GIF, PNG) и TXT файлы."""
