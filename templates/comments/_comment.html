@@ -77,8 +77,9 @@
 
         <form
             method="post"
-            action="{% url 'comment_list' %}"
+            action="{{ request.get_full_path }}"
             enctype="multipart/form-data"
+            class="js-comment-form"
         >
 
             {% csrf_token %}

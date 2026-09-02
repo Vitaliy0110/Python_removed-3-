@@ -94,7 +94,19 @@ def comment_list(request):
                 comment.save()
                 notify_new_comment()
 
-                return redirect(f'{request.path}#comment-{reply_parent.id}')
+                # Сохраняем параметры сортировки/страницы, но убираем reply,
+                # чтобы форма ответа не открывалась снова, а пользователь
+                # остался на той же странице/сортировке.
+                params = request.GET.copy()
+                params.pop('reply', None)
+                query_string = params.urlencode()
+
+                redirect_url = request.path
+                if query_string:
+                    redirect_url += f'?{query_string}'
+                redirect_url += f'#comment-{reply_parent.id}'
+
+                return redirect(redirect_url)
 
             form = CommentForm()
 

@@ -42,7 +42,7 @@
 
 <h2>Добавить комментарий</h2>
 
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" class="js-comment-form">
 
     {% csrf_token %}
 
@@ -272,6 +272,24 @@
     if (replyParam && performance.getEntriesByType('navigation')[0]?.type === 'reload') {
         window.location.href = window.location.pathname;
     }
+</script>
+
+<script>
+    // Защита от повторной отправки формы (двойной клик и т.п.)
+    document.querySelectorAll('form.js-comment-form').forEach((form) => {
+        form.addEventListener('submit', function (event) {
+            if (form.dataset.submitting === 'true') {
+                event.preventDefault();
+                return;
+            }
+            form.dataset.submitting = 'true';
+
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+        });
+    });
 </script>
 
 </body>
